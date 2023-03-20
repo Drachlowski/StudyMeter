@@ -1,5 +1,5 @@
 '''
-    Author:
+    Author: Andreas Neubauer
 
     Dieses Skript testet die Authentifizierung eines Benutzers, ob sich dieser Ein und Ausloggen kann und ob Termine erstellt,
     bearbeitet und einzelne Termine abgerufen werden können.
