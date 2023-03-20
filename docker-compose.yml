@@ -1,0 +1,11 @@
+services:
+  server:
+    container_name: server
+    environment:
+      - FLASK_APP=server:create_app()
+      - FLASK_DEBUG=1
+    volumes:
+      - ./backend:/app
+    command: flask run --host=0.0.0.0
+  redis:
+    container_name: redis
