@@ -1,19 +1,19 @@
-from flask import Blueprint
+'''
+    Author: Andreas Neubauer
 
+    Hier sind alle View-Routes als Klassen implementiert (quick and dirty und keine Datenbank benötigt)
+'''
+
+from flask import Blueprint, session, request, jsonify
+from flask.views import View
+
+# Erstellung der Blaupause
 api = Blueprint('api', 'api', url_prefix='/api')
 
 # from .authentication import *
 # from .termine import Termine
 
-from flask import session
-from email import message
-import json
-from flask.views import View
-from flask import request, jsonify
-
-from datetime import datetime
-
-
+# Statische Methode, damit wir schönere und standardisierte Responses zurückgeben können
 class APIResponse:
 
     @staticmethod
@@ -38,6 +38,7 @@ class APIResponse:
         )), 403
 
 
+# Dictionary, wo die Termine drinn gespeichert werden (kann auch über die API-Requests geändert werden)
 DUMMY_TERMINE = {
     "1": {
         "termin": dict(id = 1, name = "Termin A", zeitstempel = '2023-03-15', kursname = "STP", lehrer = 1),
@@ -69,22 +70,26 @@ DUMMY_TERMINE = {
     }
 }
 
+# Counter damit wir wissen wo wir in DUMMY_TERMINE sind
 COUNTER = 4
 
+# Dictionary, wo die Termine drinn gespeichert werden (kann auch über die API-Requests geändert werden
 DUMMY_LEHRER = {
     "1": dict(id = 1, benutzername = 'da_xavier', passwort = 'Porsche911', email = "franz_porsche@franzxavier.at"),
     "2": dict(id = 2, benutzername = 'da_franz', passwort = 'BMWLife', email = "xavier_bmw@franzxavier.at")
 }
 
+# Invites
 DUMMY_INVITES = {
 }
 
 
+
+# View Klasse für die Termine
 class Termine (View):
 
-    def __init__(self, type : str, data : dict = None) -> None:
+    def __init__(self, type : str) -> None:
         self.__TYPE = type
-        self.__DATA = data
 
 
     def compute_get_request (self, **kwargs):
@@ -172,7 +177,7 @@ class Termine (View):
         raise NotImplementedError()
 
 
-
+# View Klasse für Lehrer
 class Lehrer (View):
 
     def __login (self):
@@ -200,7 +205,7 @@ class Lehrer (View):
 
 
 
-
+# Registrierung der View-Klassen
 api.add_url_rule('/termine', view_func=Termine.as_view('termine_handler', "alles"), methods=['GET', 'POST'])
 api.add_url_rule('/termine/<id>', view_func=Termine.as_view('einzeltermin', "einzeln"), methods=['GET', 'PATCH'])
 # api.add_url_rule('/termine', view_func=Termine.as_view('termine_handler', "alles"), methods=['GET', 'POST'])

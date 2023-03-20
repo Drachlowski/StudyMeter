@@ -1,3 +1,10 @@
+'''
+    Author: Andreas Neubauer
+
+    Launcher of the flask app!
+'''
+
+# Imports from the project
 from app import create_app
 
 app = create_app()

@@ -1,3 +1,10 @@
+'''
+    Author:
+
+    Dieses Skript testet die Authentifizierung eines Benutzers, ob sich dieser Ein und Ausloggen kann und ob Termine erstellt,
+    bearbeitet und einzelne Termine abgerufen werden können.
+'''
+
 import requests as r
 
 BASE_URI = 'http://localhost:8000'

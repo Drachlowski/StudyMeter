@@ -1,6 +1,5 @@
+'''
+    Author: Andreas Neubauer
 
-
-class Settings:
-    DEBUG = True
-    hello = 123
-    g = 123
+    Hier werden normalerweise die Settings abgebildet
+'''

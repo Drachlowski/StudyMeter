@@ -1,6 +1,13 @@
-from calendar import c
-from enum import IntFlag
-from msilib import Table
+'''
+    Author: Andreas Neubauer
+
+    In diesem File werden die Modelle abgelegt. Unter anderem sowas wie die SQL-Alchemy Table Objects, die Datenbankverbindung selbst,
+    usw...
+
+    Dieses wurde leider aufgrund von Zeitdruck nicht verwendet.
+'''
+
+
 from flask_login import UserMixin
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
