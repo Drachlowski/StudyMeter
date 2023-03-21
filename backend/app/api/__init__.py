@@ -71,16 +71,14 @@ DUMMY_TERMINE = {
 }
 
 # Counter damit wir wissen wo wir in DUMMY_TERMINE sind
-COUNTER = 4
+TERMINE_COUNTER = 4
+EINLADUNGEN_COUNTER = 4
+USER_COUNTER = 1
 
 # Dictionary, wo die Termine drinn gespeichert werden (kann auch über die API-Requests geändert werden
 DUMMY_LEHRER = {
     "1": dict(id = 1, benutzername = 'da_xavier', passwort = 'Porsche911', email = "franz_porsche@franzxavier.at"),
     "2": dict(id = 2, benutzername = 'da_franz', passwort = 'BMWLife', email = "xavier_bmw@franzxavier.at")
-}
-
-# Invites
-DUMMY_INVITES = {
 }
 
 
@@ -123,16 +121,16 @@ class Termine (View):
         if "zeitstempel" not in DATA:
             return APIResponse.bad_request(message = '"zeitstempel" is missing')
         
-        global COUNTER
-        DUMMY_TERMINE[str(COUNTER)] = dict(termin = dict(
-            id = COUNTER,
+        global TERMINE_COUNTER
+        DUMMY_TERMINE[str(TERMINE_COUNTER)] = dict(termin = dict(
+            id = TERMINE_COUNTER,
             name = DATA['name'],
             zeitstempel = DATA['zeitstempel'],
             kursname = DATA['kursname'] if "kursname" in DATA else '',
             lehrer = session['user']['id']
         ))
 
-        COUNTER += 1
+        TERMINE_COUNTER += 1
 
         return APIResponse.success(message = 'Event has been created')
 
@@ -154,6 +152,26 @@ class Termine (View):
 
         return APIResponse.success(message = 'Termin erfolgreich bearbeitet')
 
+    def event_action (self, **kwargs):
+        termin = str(kwargs['id'])
+
+        if termin not in DUMMY_TERMINE: return APIResponse.bad_request(message = "Es gibt keinen Termin mit dieser ID")
+        if "user" in session and DUMMY_TERMINE[termin]['termin']["lehrer"] != session['user']['id']: 
+                return APIResponse.bad_request(message = "Es gibt keinen Termin mit dieser ID")
+        
+        if "termin" in session and session["termin"] != termin: return APIResponse.forbidden(message = "Bitte poste nur in deinem Termin")
+        
+        user_type = 'teacher' if 'user' in session else 'student'
+        user = session['user']['id'] if user_type == 'teacher' else session['student']
+        DATA = request.get_json()
+
+        if "actions" not in DUMMY_TERMINE[termin]: DUMMY_TERMINE[termin]['actions'] = []
+        from datetime import datetime as dt
+        ACTION = dict(zeitstempel = dt.now(), user_type = user_type, user_id = user, action = DATA['action'])
+        DUMMY_TERMINE[termin]['actions'].append(ACTION)
+
+        return APIResponse.success()
+
     def dispatch_request(self, **kwargs):
 
         if "user" not in session: return APIResponse.forbidden(message = 'Please authenticate to proceed!')
@@ -162,17 +180,11 @@ class Termine (View):
             return self.compute_get_request(**kwargs)
 
         if request.method == 'POST':
-            return self.create_event(**kwargs)
+            if self.__TYPE == 'alles': return self.create_event(**kwargs)
+            return self.event_action(**kwargs)
             
         if request.method == 'PATCH':
             return self.edit_event(**kwargs)
-        if request.method == 'PUT':
-            print(DUMMY_TERMINE)
-            print("HERE?")
-            if not self.request_is_valid(): return APIResponse.bad_request(message = self.validation_result)
-            DUMMY_TERMINE["1"]["termin"]["name"] = "Hello"
-            print(DUMMY_TERMINE)
-            return APIResponse.success()
 
         raise NotImplementedError()
 
@@ -205,9 +217,80 @@ class Lehrer (View):
 
 
 
+# View Klasse Einladungen
+class Einladungen (View):
+
+    def create_invite (self):
+        USER_ID = session['user']['id']
+
+        DATA = request.get_json()
+
+
+        if "termin" not in DATA: 
+            return APIResponse.bad_request(message = 'Ungültige Event ID!')
+
+        termin = str(DATA['termin'])
+        if termin not in DUMMY_TERMINE or DUMMY_TERMINE[termin]['termin']['lehrer'] != USER_ID:
+            return APIResponse.bad_request(message = 'Ungültige Event ID!')
+        
+        global EINLADUNGEN_COUNTER
+        TERMIN = dict(id = EINLADUNGEN_COUNTER, termin = int(termin))
+        if "einladungen" not in DUMMY_TERMINE[termin]: DUMMY_TERMINE[termin]['einladungen'] = []
+        DUMMY_TERMINE[termin]['einladungen'].append(TERMIN)
+        EINLADUNGEN_COUNTER += 1
+
+        return TERMIN['id']
+
+    def __init__(self, type) -> None:
+        self.__TYPE = type
+        super().__init__()
+    
+
+    def compute_join(self):
+        DATA = request.get_json()
+
+        if "einladung" not in DATA or "name" not in DATA:
+            return APIResponse.bad_request(message = 'Bitte stelle einen Invite Code und einen Namen bereit!')
+
+        TERMIN = 0
+        for termin in DUMMY_TERMINE:
+            if "einladungen" not in DUMMY_TERMINE[termin]: continue
+            for einladung in DUMMY_TERMINE[termin]['einladungen']:
+                print(einladung['id'], DATA["einladung"])
+                if einladung['id'] == DATA["einladung"]: TERMIN = termin
+
+        if TERMIN == 0: return APIResponse.bad_request(message = 'Einladung ungültig')
+
+        if "user" in session: return APIResponse.bad_request(message = 'Eingeloggte Lehrer können nicht teilnehmen!')
+
+        global USER_COUNTER
+        session['termin'] = TERMIN
+        session['student'] = USER_COUNTER
+        STUDENT = dict(id = USER_COUNTER, name = DATA['name'], termin = int(TERMIN))
+        USER_COUNTER += 1
+        if "teilnehmer" not in DUMMY_TERMINE[termin]: DUMMY_TERMINE[termin]['teilnehmer'] = []
+        DUMMY_TERMINE[termin]['teilnehmer'].append(STUDENT)
+
+        return APIResponse.success(message = 'Erfolgreich beigetreten!')
+
+    
+    def dispatch_request(self):
+
+        if self.__TYPE == 'erstellen':
+            invite = self.create_invite()
+
+            if not isinstance(invite, int): return invite
+            return APIResponse.success(message = 'Einladung wurde erstellt!', invite_id = invite)
+        
+        else:
+            return self.compute_join()
+
+
 # Registrierung der View-Klassen
 api.add_url_rule('/termine', view_func=Termine.as_view('termine_handler', "alles"), methods=['GET', 'POST'])
-api.add_url_rule('/termine/<id>', view_func=Termine.as_view('einzeltermin', "einzeln"), methods=['GET', 'PATCH'])
+api.add_url_rule('/termine/<id>', view_func=Termine.as_view('einzeltermin', "einzeln"), methods=['GET', 'POST', 'PATCH'])
+api.add_url_rule('/einladungen', view_func=Einladungen.as_view('erstelle_einladung', 'erstellen'), methods=['POST'])
+api.add_url_rule('/beitreten', view_func=Einladungen.as_view('einzeleinladungen', "beitreten"), methods=['POST'])
 # api.add_url_rule('/termine', view_func=Termine.as_view('termine_handler', "alles"), methods=['GET', 'POST'])
 api.add_url_rule('/login', view_func=Lehrer.as_view('lehrer_login'), methods=['POST'])
 api.add_url_rule('/logout', view_func=Lehrer.as_view('lehrer_logout'), methods=['DELETE'])

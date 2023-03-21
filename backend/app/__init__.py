@@ -20,7 +20,7 @@ def create_app () -> Flask:
     # Konfiguration
     app.config['SESSION_TYPE'] = 'redis'
     app.config['SECRET_KEY'] = 'super secret key'
-    app.config['SESSION_REDIS'] = redis.Redis(host='redis')
+    app.config['SESSION_REDIS'] = redis.Redis(host='172.17.0.3')
 
     # Initialisierung der Session
     sess.init_app(app)

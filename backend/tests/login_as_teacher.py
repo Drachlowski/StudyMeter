@@ -65,6 +65,18 @@ get_request('/api/termine/3')
 print('LGI Kurs mit Relationen am 24. Dezember 2023 erstellen')
 post_request('/api/termine', dict(name = 'Relationen', kursname = 'LGI', zeitstempel = '2023-12-24'))
 
+# Input id von termin zum Einladung erstellen
+# Output: status, message
+print('Erstelle Einladung zu LGI Kurs mit Relationen am 24. Dezember 2023 erstellen')
+post_request('/api/einladungen', dict(termin = 4))
+
+print('Tritt zum LGI Kurs bei')
+post_request('/api/beitreten', dict(einladung = 4, name = "Marcel"))
+
+print('STARTE LGI Termin')
+post_request('/api/termine/4', dict(action = 'start'))
+
+
 # Output: status, value als array von json objekten
 print("Alle Termine abholen:")
 get_request('/api/termine')
@@ -73,6 +85,10 @@ get_request('/api/termine')
 # Output: status, message
 print('Ändere namen von LGI Kurs zu Relationen und FUnktionen')
 patch_request('/api/termine/4', dict(name = "Relationen und Funktionen"))
+
+# Output: status, value als array von json objekten
+print("Neuen LGI Termin abholen:")
+get_request('/api/termine/4')
 
 # Output: status, value als array von json objekten
 print("Alle Termine abholen:")
