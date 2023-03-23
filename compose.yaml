@@ -1,0 +1,21 @@
+services:
+  redis:
+    image: redis
+    ports:
+      - '6379:6379'
+  backend:
+    build:
+      context: backend
+      target: builder
+    # flask requires SIGINT to stop gracefully
+    # (default stop signal from Compose is SIGTERM)
+    stop_signal: SIGINT
+    environment:
+      - FLASK_SERVER_PORT=8000
+    ports:
+      - '8000:8000'
+    volumes:
+      - ./backend:/src
+    stop_signal: SIGINT
+    depends_on:
+      - redis
