@@ -1,0 +1,204 @@
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"
+  integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.min.js"
+  integrity="sha384-cuYeSxntonz0PPNlHhBs68uyIAVpIIOZZ5JqeqvYYIcEL727kskC66kF92t6Xl2V" crossorigin="anonymous"></script>
+
+<script>
+  const options = {
+    method: 'GET',
+    credentials: 'include',
+    headers: new Headers({ 'content-type': 'application/json' }),
+  };
+  fetch('http://localhost:8000/api/termine', options)
+    .then(response => response.json())
+    .then(response => {
+      var parentElement = document.getElementById("listOfElements");
+      response.value.forEach(x => {
+        parentElement.innerHTML += "<li onmouseenter=\"mouseEnter(this)\" onmouseleave=\"mouseLeave(this)\" onClick=\"mouseClick(" + x.id + ")\" class=\"list-group-item d-flex justify-content-between align-items-start\"><div class=\"ms-2 me-auto\"><div class=\"fw-bold\">" + x.name + "</div>" + x.kursname + "</div><span style=\"Color:black\" class=\"badge bg - primary rounded - pill\">" + x.zeitstempel.toString() + "</span></li>";
+      });
+    });
+
+  function mouseEnter(obj) {
+    obj.style.backgroundColor = "darkgray";
+  }
+  function mouseLeave(obj) {
+    obj.style.backgroundColor = "";
+  }
+  function mouseClick(obj) {
+    fetch('http://localhost:8000/api/termine/' + obj.toString(), options)
+      .then(response => response.json())
+      .then(response => {
+        document.getElementById("modelHeader").innerText = response.value.termin.name;
+        document.getElementById("buttonsModal").innerHTML = "<button type=\"button\" onclick=\"GenerateInviteLink(this)\" class=\"btn btn-secondary\">Benutzereinladung</button><button type=\"button\" onClick=\"saveChangedValues(this)\" class=\"btn btn-secondary\">Save changes</button><button type=\"button\" onclick=\"startEntrie(this)\" class=\"btn btn-primary\">Start</button>";
+        var attributesList = document.getElementById("attributes");
+        attributesList.innerHTML = "";
+        attributesList.innerHTML += "<tr> <td>ID:<td/> <td id=\"inputID\">" + response.value.termin.id + "<td/> </tr>";
+        attributesList.innerHTML += "<tr> <td>Lehrer:<td/> <td>" + response.value.termin.lehrer + "<td/> </tr>";
+        attributesList.innerHTML += "<tr> <td>Kursname:<td/> <td><input id= \"inputKursName\" value=\" " + response.value.termin.kursname + "\"></input><td/> </tr>";
+        attributesList.innerHTML += "<tr> <td>Name:<td/> <td><input id=\"inputName\" value=\" " + response.value.termin.name + "\"></input><td/> </tr>";
+        attributesList.innerHTML += "<tr> <td>Zeitstempel:<td/> <td><input id=\"inputTimeStamp\" value=\" " + response.value.termin.zeitstempel + "\"></input><td/> </tr>";
+        const myModal = new bootstrap.Modal('#exampleModal', {
+          keyboard: false
+        })
+        myModal.show();
+      });
+  }
+  function GenerateInviteLink(obj) {
+    var attributesList = document.getElementById("attributes");
+    attributesList.innerHTML = "";
+    attributesList.innerHTML += "<tr> <td>ID:<td/> <td><input id=\"inputID\" value=\"\"></input><td/> </tr>";
+    document.getElementById("buttonsModal").innerHTML = "<button data-bs-dismiss=\"modal\" type=\"button\" onClick=\"addUser(this)\" class=\"btn btn-primary\">Save</button>";
+  }
+  function addUser(obj) {
+    const params = {
+      termin: document.getElementById("inputID").value
+    };
+    const options = {
+      method: 'POST',
+      credentials: 'include',
+      headers: new Headers({ 'content-type': 'application/json' }),
+      body: JSON.stringify(params)
+    };
+    fetch('http://localhost:8000//api/einladungen', options)
+      .then(response => response.json())
+      .then(response => {
+        console.log(response);
+      });
+  }
+  function saveChangedValues(obj) {
+    const params = {
+      name: document.getElementById("inputName").value,
+      kursname: document.getElementById("inputKursName").value,
+      zeitstempel: document.getElementById("inputTimeStamp").valueS
+    };
+    const options = {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: new Headers({ 'content-type': 'application/json' }),
+      body: JSON.stringify(params)
+    };
+    fetch('http://localhost:8000/api/termine/' + document.getElementById("inputID").innerText, options)
+      .then(response => response.json())
+      .then(response => {
+        console.log(response);
+        location.reload(true);
+      });
+  }
+  function createNewEntrie(obj) {
+    document.getElementById("modelHeader").innerText = "New Entrie";
+    var attributesList = document.getElementById("attributes");
+    attributesList.innerHTML = "";
+    attributesList.innerHTML += "<tr> <td>Kursname:<td/> <td><input id= \"inputKursName\" value=\" " + "" + "\"></input><td/> </tr>";
+    attributesList.innerHTML += "<tr> <td>Name:<td/> <td><input id=\"inputName\" value=\" " + "" + "\"></input><td/> </tr>";
+    attributesList.innerHTML += "<tr> <td>Zeitstempel:<td/> <td><input id=\"inputTimeStamp\" value=\" " + "" + "\"></input><td/> </tr>";
+    document.getElementById("buttonsModal").innerHTML = "<button data-bs-dismiss=\"modal\" type=\"button\" onClick=\"addNewEntrie(this)\" class=\"btn btn-primary\">Save</button>";
+    const myModal = new bootstrap.Modal('#exampleModal', {
+      keyboard: false
+    })
+    myModal.show();
+  }
+  function addNewEntrie(obj) {
+    const params = {
+      name: document.getElementById("inputName").value,
+      kursname: document.getElementById("inputKursName").value,
+      zeitstempel: document.getElementById("inputTimeStamp").value
+    };
+    const options = {
+      method: 'POST',
+      credentials: 'include',
+      headers: new Headers({ 'content-type': 'application/json' }),
+      body: JSON.stringify(params)
+    };
+    fetch('http://localhost:8000/api/termine', options)
+      .then(response => response.json())
+      .then(response => {
+        location.reload(true);
+      });
+  }
+  function joinEntrie(obj) {
+    var attributesList = document.getElementById("attributes");
+    attributesList.innerHTML = "";
+    attributesList.innerHTML += "<tr> <td>ID:<td/> <td><input id=\"inputID\" value=\"\"></input><td/> </tr>";
+    attributesList.innerHTML += "<tr> <td>Teilnehmername:<td/> <td><input id=\"inputName\" value=\"\"></input><td/> </tr>";
+    document.getElementById("buttonsModal").innerHTML = "<button data-bs-dismiss=\"modal\" type=\"button\" onClick=\"addDateEntrie(this)\" class=\"btn btn-primary\">Save</button>";
+    const myModal = new bootstrap.Modal('#exampleModal', {
+      keyboard: false
+    })
+    myModal.show();
+  }
+  function addDateEntrie(obj) {
+    const params = {
+      einladung: document.getElementById("inputID").value,
+      name: document.getElementById("inputName").value
+    };
+    const options = {
+      method: 'POST',
+      credentials: 'include',
+      headers: new Headers({ 'content-type': 'application/json' }),
+      body: JSON.stringify(params)
+    };
+    fetch('http://localhost:8000//api/beitreten', options)
+      .then(response => response.json())
+      .then(response => {
+        console.log(response);
+      });
+  }
+  function startEntrie(obj) {
+    const params = {
+      action: "start"
+    };
+    const options = {
+      method: 'POST',
+      credentials: 'include',
+      headers: new Headers({ 'content-type': 'application/json' }),
+      body: JSON.stringify(params)
+    };
+    fetch('http://localhost:8000/api/termine/' + document.getElementById("inputID").innerText, options)
+      .then(response => response.json())
+      .then(response => {
+        console.log(response);
+
+        var attributesList = document.getElementById("attributes");
+        attributesList.innerHTML = "";
+        attributesList.innerHTML += "<tr><div></div> <td><button style=\"width:250\" type=\"button\" class=\"btn btn-secondary\">Bitte langsamer!</button><td/><td><td/><p style=\" text-align:left;line-height:  35px;\">40 Stimmen</p> </tr>";
+        attributesList.innerHTML += "<tr><div></div> <td><button style=\"width:250\"type=\"button\" class=\"btn btn-secondary\">Verstanden!</button><td/><td><td/><p style=\" text-align:left;line-height:       35px;\">12 Stimmen</p> </tr>";
+        attributesList.innerHTML += "<tr><div></div> <td><button style=\"width:250\"type=\"button\" class=\"btn btn-secondary\">Nicht Verstanden!</button><td/><td><td/><p style=\" text-align:left;line-height: 35px;\">35 Stimmen</p> </tr>";
+        attributesList.innerHTML += "<tr><div></div> <td><button style=\"width:250\"type=\"button\" class=\"btn btn-secondary\">Kaffepause!</button><td/><td><td/><p style=\" text-align:left;line-height:       35px;\">35 Stimmen</p> </tr>";
+        attributesList.innerHTML += "<tr><div></div> <td><button style=\"width:250\"type=\"button\" class=\"btn btn-secondary\">Raucherpause!</button><td/><td><td/><p style=\" text-align:left;line-height:     35px;\">15 Stimmen</p> </tr>";
+        attributesList.innerHTML += "<tr><div></div> <td><button style=\"width:250\"type=\"button\" class=\"btn btn-secondary\">Bitte lauter!</button><td/><td><td/><p style=\" text-align:left;line-height:     35px;\">2 Stimmen</p> </tr>";
+        document.getElementById("buttonsModal").innerHTML = "";
+
+      });
+  }
+</script>
+
+<body>
+  <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 id="modelHeader" class="modal-title fs-5" id="exampleModalLabel">Modal title</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <table id="attributes" class="table table-striped">
+
+          </table>
+        </div>
+        <div id="buttonsModal" class="modal-footer">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="width:500px; padding-top: 20px; margin:0 auto;">
+    <ol id="listOfElements" class="list-group list-group-numbered">
+    </ol>
+  </div>
+  <div style="width:500px; padding-top: 20px; margin:0 auto;">
+    <button style="float: right;" onclick="createNewEntrie(this)" type="button" class="btn btn-primary">Add</button>
+
+    <button style="float: right;" onclick="joinEntrie(this)" type="button" class="btn btn-primary">Termin
+      beitreten</button>
+  </div>
+</body>
