@@ -5,7 +5,8 @@
     zurück.
 '''
 
-from flask import Flask, session
+from flask import Flask, session, render_template
+from flask_cors import CORS
 from flask_session import Session
 import redis
 
@@ -29,9 +30,16 @@ def create_app () -> Flask:
     @app.route('/')
     def index (): return 'Done'
 
+    @app.route('/login')
+    def login (): return render_template('login.html')
+
+    @app.route('/dateOverview')
+    def dataOverview (): return render_template('dateOverview.html')
+
     # Initialisierung und Registrierung der API Blaupause
     from .api import api
     app.register_blueprint(api)
-
+    
+    cors = CORS(app, resources={r"/*":{"origins": "*"}}, supports_credentials = True)
 
     return app

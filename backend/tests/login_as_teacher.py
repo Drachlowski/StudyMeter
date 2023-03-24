@@ -76,6 +76,12 @@ post_request('/api/beitreten', dict(einladung = 4, name = "Marcel"))
 print('STARTE LGI Termin')
 post_request('/api/termine/4', dict(action = 'start'))
 
+eingabe = ''
+while eingabe == '':
+    eingabe = input()
+    get_request('/api/termine/4')
+
+
 
 # Output: status, value als array von json objekten
 print("Alle Termine abholen:")
@@ -97,5 +103,3 @@ get_request('/api/termine')
 # Output: status, message
 print("Logge mich von aus 'da_xavier'")
 delete_request('/api/logout')
-
-

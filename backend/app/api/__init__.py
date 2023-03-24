@@ -174,7 +174,7 @@ class Termine (View):
 
     def dispatch_request(self, **kwargs):
 
-        if "user" not in session: return APIResponse.forbidden(message = 'Please authenticate to proceed!')
+        if "user" not in session and "student" not in session: return APIResponse.forbidden(message = 'Please authenticate to proceed!')
 
         if request.method == 'GET':
             return self.compute_get_request(**kwargs)
